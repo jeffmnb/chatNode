@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatNode</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+</head>
+
+<body>
+    <header>
+        <form id="form" action="">
+            <!-- <input type="text" id="username" autocomplete="off" autofocus placeholder="Usuário"> -->
+            <input type="text" id="msg" autocomplete="off" placeholder="Qual seu nome?">
+            <button type="submit">Enviar</button>
+        </form>
+    </header>
+
+    <ul id="mensagens">
+        <div id="status"></div>
+    </ul>
+
+    <script>
+        $(() => {
+            const socket = io(); //recupera a lib io
+
+            socket.nickname = '';
+
+            $('#form').submit((event) => {
+
+                if (socket.nickname === '') {
+                    $('#msg').attr({ placeholder: "Digite sua mensagem" });
+                    socket.nickname = $('#msg').val();
+                    socket.emit('login', socket.nickname);
+
+                    $('#msg').keypress(() => {
+                        socket.emit('status', `${socket.nickname} está digitando...`)
+                    })
+
+                    $('#msg').keyup(() => {
+                        setTimeout(() => {
+                            socket.emit('status', '');
+                        }, 2000);
+                    })
+
+                    socket.on('status', (status) => {
+                        $('#status').html(status)
+                    });
+
+                } else {
+                    socket.emit('chatMessage', $('#msg').val());
+                }
+
+                $('#msg').val('');//apaga conteudo no campo
+                $('#username').val('');
+                return false;
+            });
+
+
+            socket.on('chatMessage', (message) => {
+                $('#mensagens').append($('<li>').text(message));
+            });
+        })
+    </script>
+</body>
+
+</html>
